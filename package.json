@@ -1,0 +1,22 @@
+{
+  "name": "dane990.github.io",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "vite build",
+    "deploy": "gh-pages -d dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dane990/dane990.github.io.git"
+  },
+  "author": "Dane",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dane990/dane990.github.io/issues"
+  },
+  "homepage": "https://github.com/dane990/dane990.github.io#readme",
+  "description": "",
+  "devDependencies": {
+    "gh-pages": "^6.1.1"
+  }
+}
