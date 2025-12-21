@@ -1,11 +1,12 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { createText, OrbitControls } from 'three/examples/jsm/Addons.js';
-import { Sky } from 'three/addons/objects/Sky.js';
-import { Reflector } from 'three/examples/jsm/Addons.js';
-import { LightProbeHelper } from 'three/addons/helpers/LightProbeHelper.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Sky } from "three/examples/jsm/objects/Sky.js";
+import { Reflector } from "three/examples/jsm/objects/Reflector.js";
+import { LightProbeHelper } from "three/examples/jsm/helpers/LightProbeHelper.js";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 
 import pianowireframeURL from './assets/pianowireframe.jpg';
 import pianorigURL from './assets/pianorig.png';
@@ -21,7 +22,8 @@ import asolMasteryURL from './assets/asolmastery.png';
 import pianoImageURL from './assets/pianoimage.png';
 import frenchhornURL from './assets/frenchhorn.png';
 
-
+import { createTextMesh } from './ui/primitives/createTextMesh.js';
+import { createCircleButton } from './ui/primitives/createCircleButton.js';
 
 import { wait } from './utils';
 //-0.3855
@@ -37,42 +39,6 @@ export function createScreen(scene, screenColor, screenRotation) {
 
 }
 
-async function createTextMesh(scene, menuScreen, text, fontsize, px, py, pz, screenRotation, writingColor) {
-
-	const loader = new FontLoader();
-	loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', async function (font) {
-
-  	const textGeometry = new TextGeometry(text, {
-    	font: font,
-    	size: fontsize, // Font size
-    	depth: 0.01, // Thickness of the text
-    	curveSegments: 12,
-    	bevelEnabled: false
-  	});
-
-	const textMaterial = new THREE.MeshBasicMaterial({ color: writingColor });
-  	const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-  	
-	textGeometry.computeBoundingBox();
-	const textBoundingBox = textGeometry.boundingBox;
-	const textWidth = textBoundingBox.max.x - textBoundingBox.min.x;
-	const textHeight = textBoundingBox.max.y - textBoundingBox.min.y;
-	textGeometry.translate(-textWidth / 2, -textHeight / 2, 0);
-	textMesh.position.set(px, py, pz);
-	textMesh.rotation.x = screenRotation;
-  	textMesh.rotation.y = Math.PI;
-	scene.add(textMesh);
-	menuScreen.add(textMesh);
-
-	await wait(1000);
-
-    menuScreen.remove(textMesh);
-	scene.remove(textMesh);
-	textMesh.geometry.dispose();
-	textMesh.material.dispose();
-	})
-}
-
 export function updateTimeMesh(scene, menuScreen, screenRotation, writingColor, daysOfWeek, months) {
 
 	const date = new Date();
@@ -81,43 +47,37 @@ export function updateTimeMesh(scene, menuScreen, screenRotation, writingColor, 
 	const hours = date.getHours();      // (0-23)
 	const minutes = date.getMinutes();  // (0-59)
 	const seconds = date.getSeconds();  // (0-59)
+	
 	const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-	createTextMesh(scene, menuScreen, formattedTime, 0.09, 0, 2.83, -0.358, screenRotation, writingColor);
+	//createTextMesh(scene, menuScreen, formattedTime, 0.09, 0, 2.83, -0.358, screenRotation, writingColor);
+
+	createTextMesh({
+		scene: scene,
+		parent: menuScreen,
+		text: formattedTime,
+		fontSize: 0.09,
+		position: new THREE.Vector3(0, 2.83, -0.358),
+		screenRotation: screenRotation,
+		color: writingColor,
+	});
 
 	//date
 	const dayName = daysOfWeek[date.getDay()];
   	const monthName = months[date.getMonth()];
   	const dayNumber = date.getDate();
 	const formattedDate = `${dayName}, ${monthName} ${dayNumber}`;
-	createTextMesh(scene, menuScreen, formattedDate, 0.025, 0, 2.925, -0.343, screenRotation, writingColor);
+	//createTextMesh(scene, menuScreen, formattedDate, 0.025, 0, 2.925, -0.343, screenRotation, writingColor);
+
+	createTextMesh({
+		scene: scene,
+		parent: menuScreen,
+		text: formattedDate,
+		fontSize: 0.025,
+		position: new THREE.Vector3(0, 2.925, -0.343),
+		screenRotation: screenRotation,
+		color: writingColor,
+	});
     
-
-}
-
-function createCircleButton(scene, screenColor, writingColor, screenRotation, px, py, pz, buttonRadius, borderRadius) {
-
-	const buttonGeometry = new THREE.CircleGeometry(buttonRadius, 32);
-	const buttonMaterial = new THREE.MeshBasicMaterial({ color: screenColor, side: THREE.DoubleSide }); 
-	const buttonMesh = new THREE.Mesh(buttonGeometry, buttonMaterial);
-
-	// Create a circle for the border 
-	const borderGeometry = new THREE.CircleGeometry(borderRadius, 32); 
-	const borderMaterial = new THREE.MeshBasicMaterial({ color: writingColor, side: THREE.DoubleSide }); 
-	const borderMesh = new THREE.Mesh(borderGeometry, borderMaterial);
-
-	buttonMesh.position.z = -0.0001;
-
-	const buttonGroup = new THREE.Group();
-	buttonGroup.add(buttonMesh);
-	buttonGroup.add(borderMesh);
-
-	buttonGroup.position.set(px, py, pz-0.0001);
-	buttonGroup.rotation.x = screenRotation;
-	
-
-	scene.add(buttonGroup);
-	
-	return buttonGroup;
 
 }
 
@@ -257,22 +217,54 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 	const borderRadius = 0.107;
 
     //play button
-    const midButton = createCircleButton(scene, screenColor, writingColor, screenRotation, 0, ypbutton, zpbutton, buttonRadius, borderRadius);
+	const midButton = createCircleButton({
+		scene: scene,
+		screenColor: screenColor,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(0, ypbutton, zpbutton),
+		buttonRadius: buttonRadius,
+		borderRadius: borderRadius,
+	});
     const playSymbol = createPlaySymbol(scene, writingColor, screenRotation, -0.01, ypbutton, zpbutton-0.0002);
 
     //stop button
-    const midButton2 = createCircleButton(scene, screenColor, writingColor, screenRotation, 0, ypbutton, zpbutton, buttonRadius, borderRadius);
+	const midButton2 = createCircleButton({
+		scene: scene,
+		screenColor: screenColor,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(0, ypbutton, zpbutton),
+		buttonRadius: buttonRadius,
+		borderRadius: borderRadius,
+	});
     const stopSymbol = createStopSymbol(scene, writingColor, screenRotation, 0, ypbutton, zpbutton-0.0002);
     midButton2.visible = false;
     stopSymbol.visible = false;
 
     //portfolio button
-    const leftButton = createCircleButton(scene, screenColor, writingColor, screenRotation, buttondist, ypbutton, zpbutton, buttonRadius, borderRadius); //tbw, tbh, lrw, lrh
+	const leftButton = createCircleButton({ //tbw, tbh, lrw, lrh
+		scene: scene,
+		screenColor: screenColor,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(buttondist, ypbutton, zpbutton),
+		buttonRadius: buttonRadius,
+		borderRadius: borderRadius,
+	});
     const portSymbol = createPortfolioSymbol(scene, writingColor, screenRotation, buttondist, ypbutton-0.014, zpbutton+0.0026, 0.05, 0.03, 0.04, 0.09);
     const portHandle = createPortfolioSymbol(scene, writingColor, screenRotation, buttondist, ypbutton+0.035, zpbutton+0.0104, 0.08, 0.01, 0.01, 0.05);
 
     //settings button
-    const rightButton = createCircleButton(scene, screenColor, writingColor, screenRotation, -buttondist, ypbutton, zpbutton, buttonRadius, borderRadius);
+	const rightButton = createCircleButton({
+		scene: scene,
+		screenColor: screenColor,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(-buttondist, ypbutton, zpbutton),
+		buttonRadius: buttonRadius,
+		borderRadius: borderRadius,
+	});
     const settingsIcon = createSettingsIcon(scene, writingColor, screenRotation, -buttondist, ypbutton, zpbutton+0.0004)
     const gearCenter = createGearCenter(scene, screenColor, screenRotation, -buttondist, ypbutton, zpbutton-0.0003)
 
@@ -596,14 +588,30 @@ function createEnvIndicator(scene, screenColor, writingColor, screenRotation, xp
 	if (pages % 2 == 0) {
 		
 		for (let i = dx/2 + dx*(pages/2-1); i >= -dx/2 - dx*(pages/2-1); i -= dx) {
-			const button = createCircleButton(scene, screenColor, writingColor, screenRotation, i, yp+0.33, zp+0.0524, circleRadius, circleBorder);
+			const button = createCircleButton({
+				scene: scene,
+				screenColor: screenColor,
+				writingColor: writingColor,
+				screenRotation: screenRotation,
+				position: new THREE.Vector3(i, yp+0.33, zp+0.0524),
+				buttonRadius: circleRadius,
+				borderRadius: circleBorder,
+			});
 			pageIndicator.add(button);
 		}
 		
 	} else {
 
 		for (let i = dx*(Math.floor(pages/2)); i >= -dx*(Math.floor(pages/2)); i -= dx) {
-			const button = createCircleButton(scene, screenColor, writingColor, screenRotation, i, yp+0.33, zp+0.0524, circleRadius, circleBorder);
+			const button = createCircleButton({
+				scene: scene,
+				screenColor: screenColor,
+				writingColor: writingColor,
+				screenRotation: screenRotation,
+				position: new THREE.Vector3(i, yp+0.33, zp+0.0524),
+				buttonRadius: circleRadius,
+				borderRadius: circleBorder,
+			});
 			pageIndicator.add(button);
 		}
 	}
@@ -678,9 +686,33 @@ export function createPortfolioScreen(scene, screenColor, writingColor, screenRo
 
 	const backButton = createBackButton(scene, screenColor, writingColor, screenRotation, 0, ypbutton, zpbutton);
 
-	const leftButton = createCircleButton(scene, 0x178731, writingColor, screenRotation, buttondist, ypbutton, zpbutton, 0.13, 0.135);
-	const midButton = createCircleButton(scene, 0x914316, writingColor, screenRotation, 0, ypbutton+0.21, zpbutton+0.0333, 0.13, 0.135);
-	const rightButton = createCircleButton(scene, 0x1b748f, writingColor, screenRotation, -buttondist, ypbutton, zpbutton, 0.13, 0.135);
+	const leftButton = createCircleButton({
+		scene: scene,
+		screenColor: 0x178731,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(buttondist, ypbutton, zpbutton),
+		buttonRadius: 0.13,
+		borderRadius: 0.135,
+	});
+	const midButton = createCircleButton({
+		scene: scene,
+		screenColor: 0x914316,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(0, ypbutton+0.21, zpbutton+0.0333),
+		buttonRadius: 0.13,
+		borderRadius: 0.135,
+	});
+	const rightButton = createCircleButton({
+		scene: scene,
+		screenColor: 0x1b748f,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(-buttondist, ypbutton, zpbutton),
+		buttonRadius: 0.13,
+		borderRadius: 0.135,
+	});
 
 
 	const portfolioGroup = new THREE.Group();
@@ -719,14 +751,30 @@ function createPageIndicator(scene, screenColor, writingColor, screenRotation, x
 	if (pages % 2 == 0) {
 		
 		for (let i = dx/2 + dx*(pages/2-1); i >= -dx/2 - dx*(pages/2-1); i -= dx) {
-			const button = createCircleButton(scene, screenColor, writingColor, screenRotation, i, yp+0.33, zp+0.0524, circleRadius, circleBorder);
+			const button = createCircleButton({
+				scene: scene,
+				screenColor: screenColor,
+				writingColor: writingColor,
+				screenRotation: screenRotation,
+				position: new THREE.Vector3(i, yp+0.33, zp+0.0524),
+				buttonRadius: circleRadius,
+				borderRadius: circleBorder,
+			});
 			pageIndicator.add(button);
 		}
 		
 	} else {
 
 		for (let i = dx*(Math.floor(pages/2)); i >= -dx*(Math.floor(pages/2)); i -= dx) {
-			const button = createCircleButton(scene, screenColor, writingColor, screenRotation, i, yp+0.33, zp+0.0524, circleRadius, circleBorder);
+			const button = createCircleButton({
+				scene: scene,
+				screenColor: screenColor,
+				writingColor: writingColor,
+				screenRotation: screenRotation,
+				position: new THREE.Vector3(i, yp+0.33, zp+0.0524),
+				buttonRadius: circleRadius,
+				borderRadius: circleBorder,
+			});
 			pageIndicator.add(button);
 		}
 	}
@@ -1014,7 +1062,15 @@ export function createProjectsScreen(scene, screenColor, writingColor, screenRot
     const zp = -0.4013;
 
 	const projectsColor = 0x178731;
-	const closeButton = createCircleButton(scene, screenColor, writingColor, screenRotation, -0.383, yp+0.33, zp+0.0524, 0.02, 0.022);
+	const closeButton = createCircleButton({
+				scene: scene,
+				screenColor: screenColor,
+				writingColor: writingColor,
+				screenRotation: screenRotation,
+				position: new THREE.Vector3(-0.383, yp+0.33, zp+0.0524),
+				buttonRadius: 0.02,
+				borderRadius: 0.022,
+			});
 	const pageIndicator = createPageIndicator(scene, screenColor, writingColor, screenRotation, 0, yp, zp, 1, 1.1, 3)
 	
 
@@ -1038,7 +1094,15 @@ export function createAboutScreen(scene, screenColor, writingColor, screenRotati
 	const yp0 = 2.62;
     const zp0 = -0.4013;
 	const aboutColor = 0x914316;
-	const closeButton = createCircleButton(scene, screenColor, writingColor, screenRotation, -0.383, yp0+0.33, zp0+0.0524, 0.02, 0.022);
+	const closeButton = createCircleButton({
+				scene: scene,
+				screenColor: screenColor,
+				writingColor: writingColor,
+				screenRotation: screenRotation,
+				position: new THREE.Vector3(-0.383, yp0+0.33, zp0+0.0524),
+				buttonRadius: 0.02,
+				borderRadius: 0.022,
+			});
 
 	const pageGroup = new THREE.Group();
 
@@ -1418,7 +1482,15 @@ export function createHobbiesScreen(scene, screenColor, writingColor, screenRota
     const zp = -0.4013;
 
 	const hobbiesColor = 0x1b748f;
-	const closeButton = createCircleButton(scene, screenColor, writingColor, screenRotation, -0.383, yp+0.33, zp+0.0524, 0.02, 0.022);
+	const closeButton = createCircleButton({
+				scene: scene,
+				screenColor: screenColor,
+				writingColor: writingColor,
+				screenRotation: screenRotation,
+				position: new THREE.Vector3(-0.383, yp+0.33, zp+0.0524),
+				buttonRadius: 0.02,
+				borderRadius: 0.022,
+			});
 	const pageIndicator = createPageIndicator(scene, screenColor, writingColor, screenRotation, 0, yp, zp, 1, 1.1, 3)
 
 

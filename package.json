@@ -18,5 +18,8 @@
   "description": "",
   "devDependencies": {
     "gh-pages": "^6.1.1"
+  },
+  "dependencies": {
+    "three": "^0.182.0"
   }
 }
