@@ -26,6 +26,7 @@ import { createTextMesh } from './ui/primitives/createTextMesh.js';
 import { createCircleButton } from './ui/primitives/createCircleButton.js';
 import { createPlaySymbol } from './ui/primitives/createPlaySymbol.js';
 import { createStopSymbol } from './ui/primitives/createStopSymbol.js';
+import { createPortfolioSymbol } from './ui/primitives/createPortfolioSymbol.js';
 
 
 import { wait } from './utils';
@@ -82,48 +83,6 @@ export function updateTimeMesh(scene, menuScreen, screenRotation, writingColor, 
 	});
     
 
-}
-
-function createPortfolioSymbol(scene, writingColor, screenRotation, px, py, pz, tbwidth, tbheight, lrwidth, lrheight) {
-
-	const material = new THREE.MeshBasicMaterial({ color: writingColor });
-
-    // Create the 4 rectangular pieces that will form the outer frame
-	const depth = 0.01;
-
-    // Top rectangle
-    const topGeometry = new THREE.BoxGeometry(tbwidth, tbheight, depth);
-    const topMesh = new THREE.Mesh(topGeometry, material);
-    topMesh.position.set(0, (lrheight-tbheight) / 2, 0);
-
-    // Bottom rectangle
-    const bottomGeometry = new THREE.BoxGeometry(tbwidth, tbheight, depth);
-    const bottomMesh = new THREE.Mesh(bottomGeometry, material);
-    bottomMesh.position.set(0, -(lrheight-tbheight) / 2, 0);
-
-    // Left rectangle
-    const leftGeometry = new THREE.BoxGeometry(lrwidth, lrheight, depth);
-    const leftMesh = new THREE.Mesh(leftGeometry, material);
-    leftMesh.position.set(-(tbwidth+lrwidth) / 2, 0, 0);
-
-    // Right rectangle
-    const rightGeometry = new THREE.BoxGeometry(lrwidth, lrheight, depth);
-    const rightMesh = new THREE.Mesh(rightGeometry, material);
-    rightMesh.position.set((tbwidth+lrwidth) / 2, 0, 0);
-
-    // Combine the 4 pieces into a group
-    const portfolio = new THREE.Group();
-    portfolio.add(topMesh);
-    portfolio.add(bottomMesh);
-    portfolio.add(leftMesh);
-    portfolio.add(rightMesh);
-
-    // Add the group to the scene
-	portfolio.position.set(px, py, pz);
-	portfolio.rotation.x = screenRotation;
-    scene.add(portfolio);
-	return portfolio;
-		
 }
 
 function createSettingsIcon(scene, writingColor, screenRotation, px, py, pz) {
@@ -238,8 +197,35 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		buttonRadius: buttonRadius,
 		borderRadius: borderRadius,
 	});
-    const portSymbol = createPortfolioSymbol(scene, writingColor, screenRotation, buttondist, ypbutton-0.014, zpbutton+0.0026, 0.05, 0.03, 0.04, 0.09);
-    const portHandle = createPortfolioSymbol(scene, writingColor, screenRotation, buttondist, ypbutton+0.035, zpbutton+0.0104, 0.08, 0.01, 0.01, 0.05);
+	const portSymbol = createPortfolioSymbol({
+		scene: scene,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(
+			buttondist,
+			ypbutton - 0.014,
+			zpbutton + 0.0026
+		),
+		topBottomWidth: 0.05,
+		topBottomHeight: 0.03,
+		leftRightWidth: 0.04,
+		leftRightHeight: 0.09,
+	});
+	const portHandle = createPortfolioSymbol({
+		scene: scene,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(
+			buttondist,
+			ypbutton + 0.035,
+			zpbutton + 0.0104
+		),
+		topBottomWidth: 0.08,
+		topBottomHeight: 0.01,
+		leftRightWidth: 0.01,
+		leftRightHeight: 0.05,
+	});
+	
 
     //settings button
 	const rightButton = createCircleButton({
