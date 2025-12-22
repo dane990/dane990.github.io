@@ -24,6 +24,9 @@ import frenchhornURL from './assets/frenchhorn.png';
 
 import { createTextMesh } from './ui/primitives/createTextMesh.js';
 import { createCircleButton } from './ui/primitives/createCircleButton.js';
+import { createPlaySymbol } from './ui/primitives/createPlaySymbol.js';
+import { createStopSymbol } from './ui/primitives/createStopSymbol.js';
+
 
 import { wait } from './utils';
 //-0.3855
@@ -79,36 +82,6 @@ export function updateTimeMesh(scene, menuScreen, screenRotation, writingColor, 
 	});
     
 
-}
-
-function createPlaySymbol(scene, writingColor, screenRotation, px, py, pz) {
-	const triangleShape = new THREE.Shape();
-	triangleShape.moveTo(-1, -1); // First vertex (bottom-left)
-	triangleShape.lineTo(1, 0);   // Second vertex (middle-right)
-	triangleShape.lineTo(-1, 1);  // Third vertex (top-left)
-	triangleShape.lineTo(-1, -1); // Close the shape
-
-	const geometry = new THREE.ShapeGeometry(triangleShape);
-	const material = new THREE.MeshBasicMaterial({ color: writingColor, side: THREE.DoubleSide }); // White color for the play button
-	const triangleMesh = new THREE.Mesh(geometry, material);
-	const scalef = 0.05;
-	triangleMesh.scale.set(scalef, scalef, scalef);
-	triangleMesh.rotation.z = Math.PI; 
-	triangleMesh.position.set(px, py, pz-0.0001);
-	triangleMesh.rotation.x = screenRotation;
-	scene.add(triangleMesh);
-	return triangleMesh;
-}
-
-function createStopSymbol(scene, writingColor, screenRotation, px, py, pz) {
-	const side = 0.07;
-	const geometry = new THREE.PlaneGeometry(side, side); 
-	const material = new THREE.MeshBasicMaterial({ color: writingColor, side: THREE.DoubleSide });
-	const square = new THREE.Mesh(geometry, material);
-	square.position.set(px, py, pz-0.0001);
-	square.rotation.x = screenRotation;
-	scene.add(square);
-	return square;
 }
 
 function createPortfolioSymbol(scene, writingColor, screenRotation, px, py, pz, tbwidth, tbheight, lrwidth, lrheight) {
@@ -226,7 +199,14 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		buttonRadius: buttonRadius,
 		borderRadius: borderRadius,
 	});
-    const playSymbol = createPlaySymbol(scene, writingColor, screenRotation, -0.01, ypbutton, zpbutton-0.0002);
+  
+	const playSymbol = createPlaySymbol({
+		scene: scene,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(-0.01, ypbutton, zpbutton - 0.0002),
+	});
+
 
     //stop button
 	const midButton2 = createCircleButton({
@@ -238,7 +218,13 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		buttonRadius: buttonRadius,
 		borderRadius: borderRadius,
 	});
-    const stopSymbol = createStopSymbol(scene, writingColor, screenRotation, 0, ypbutton, zpbutton-0.0002);
+	const stopSymbol = createStopSymbol({
+		scene: scene,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(0, ypbutton, zpbutton - 0.0002),
+	});
+
     midButton2.visible = false;
     stopSymbol.visible = false;
 
