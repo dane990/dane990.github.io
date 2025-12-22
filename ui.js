@@ -29,6 +29,7 @@ import { createStopSymbol } from './ui/primitives/createStopSymbol.js';
 import { createPortfolioSymbol } from './ui/primitives/createPortfolioSymbol.js';
 import { createSettingsSymbol } from './ui/primitives/createSettingsSymbol.js';
 import { createBackButton } from './ui/primitives/createBackButton.js';
+import { createBackSymbol } from './ui/primitives/createBackSymbol.js';
 
 
 import { wait } from './utils';
@@ -462,30 +463,6 @@ function createSoundIcon(scene, writingColor, screenRotation, px, py, pz) {
     return soundIconGroup;
 }
 
-function createBackSymbol(scene, writingColor, screenRotation, px, py, pz, callback) {
-    const loader = new FontLoader();
-    let textMesh;
-	loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', async function (font) {
-
-  	const textGeometry = new TextGeometry('>', {
-    	font: font,
-    	size: 0.045, // Font size
-    	depth: 0.01, // Thickness of the text
-    	curveSegments: 12,
-    	bevelEnabled: false
-  	});
-
-	const textMaterial = new THREE.MeshBasicMaterial({ color: writingColor });
-  	textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    textMesh.position.set(px-0.015, py-0.12, pz-0.0193);
-    textMesh.rotation.x = screenRotation;
-    scene.add(textMesh);
-
-    if (callback) callback(textMesh);
-    });
-
-}
-
 function createEnvIndicator(scene, screenColor, writingColor, screenRotation, xp, yp, zp, pages) {
 	const pageIndicator = new THREE.Group();
 	const dx = 0.13
@@ -558,9 +535,15 @@ export function createSettingsScreen(scene, screenColor, writingColor, screenRot
     settingsGroup.add(soundIcon);
     settingsGroup.add(settingsBackButton);
 	settingsGroup.add(envIndicator);
-    createBackSymbol(scene, writingColor, screenRotation, 0, ypbutton, zpbutton, function(textMesh) {
-        settingsGroup.add(textMesh);
-    })
+	createBackSymbol({
+		scene: scene,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(0, ypbutton, zpbutton),
+		callback: function (textMesh) {
+			settingsGroup.add(textMesh);
+		},
+	});
    
     scene.add(settingsGroup);
     return settingsGroup;
@@ -645,9 +628,15 @@ export function createPortfolioScreen(scene, screenColor, writingColor, screenRo
 	const portfolioGroup = new THREE.Group();
 
 	portfolioGroup.add(backButton);
-	createBackSymbol(scene, writingColor, screenRotation, 0, ypbutton, zpbutton, function(textMesh) {
-        portfolioGroup.add(textMesh);
-    })
+	createBackSymbol({
+		scene: scene,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(0, ypbutton, zpbutton),
+		callback: function (textMesh) {
+			portfolioGroup.add(textMesh);
+		},
+	});
 
 	portfolioGroup.add(leftButton);
 	createPortText(scene, 'Projects', 0.03, writingColor, screenRotation, buttondist, ypbutton, zpbutton+0.0008, function(textMesh){
