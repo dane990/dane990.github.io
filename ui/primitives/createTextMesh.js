@@ -15,6 +15,7 @@ export async function createTextMesh({
     color,
     duration = 1000,
 }) {
+    
     const loader = new FontLoader();
 
     loader.load(FONT_URL, async function (font) {
@@ -50,6 +51,6 @@ export async function createTextMesh({
 
         mesh.geometry.dispose();
         mesh.material.dispose();
-        
+
     });
 }
