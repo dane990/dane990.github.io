@@ -28,6 +28,7 @@ import { createPlaySymbol } from './ui/primitives/createPlaySymbol.js';
 import { createStopSymbol } from './ui/primitives/createStopSymbol.js';
 import { createPortfolioSymbol } from './ui/primitives/createPortfolioSymbol.js';
 import { createSettingsSymbol } from './ui/primitives/createSettingsSymbol.js';
+import { createBackButton } from './ui/primitives/createBackButton.js';
 
 
 import { wait } from './utils';
@@ -461,30 +462,6 @@ function createSoundIcon(scene, writingColor, screenRotation, px, py, pz) {
     return soundIconGroup;
 }
 
-function createBackButton(scene, screenColor, writingColor, screenRotation, px, py, pz) {
-    const buttonGeometry = new THREE.CircleGeometry(0.04, 32);
-	const buttonMaterial = new THREE.MeshBasicMaterial({ color: screenColor, side: THREE.DoubleSide }); 
-	const buttonMesh = new THREE.Mesh(buttonGeometry, buttonMaterial);
-
-	// Create a circle for the border 
-	const borderGeometry = new THREE.CircleGeometry(0.045, 32); 
-	const borderMaterial = new THREE.MeshBasicMaterial({ color: writingColor, side: THREE.DoubleSide }); 
-	const borderMesh = new THREE.Mesh(borderGeometry, borderMaterial);
-
-	buttonMesh.position.z = -0.0001;
-
-	const buttonGroup = new THREE.Group();
-	buttonGroup.add(buttonMesh);
-	buttonGroup.add(borderMesh);
-
-	buttonGroup.position.set(px, py-0.1, pz-0.016);
-	buttonGroup.rotation.x = screenRotation;
-	
-	scene.add(buttonGroup);
-	
-	return buttonGroup;
-}
-
 function createBackSymbol(scene, writingColor, screenRotation, px, py, pz, callback) {
     const loader = new FontLoader();
     let textMesh;
@@ -558,7 +535,17 @@ export function createSettingsScreen(scene, screenColor, writingColor, screenRot
     const volBar = createVolumeBar(scene, writingColor, screenRotation, -0.11, ypbutton+0.27, zpbutton+0.0448);
     var currentVolumeIndicator = createVolumeIndicator(scene, screenColor, screenRotation, -0.11, ypbutton+0.27, zpbutton+0.0446, volInitial);
     const soundIcon = createSoundIcon(scene, writingColor, screenRotation, 0.29, ypbutton+0.27, zpbutton+0.0427);
-    const settingsBackButton = createBackButton(scene, screenColor, writingColor, screenRotation, 0, ypbutton, zpbutton);
+	const settingsBackButton = createBackButton({
+		scene: scene,
+		screenColor: screenColor,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(
+			0,
+			ypbutton - 0.1,
+			zpbutton - 0.016
+		),
+	});
 
 	const yp = 2.62;
     const zp = -0.4013;
@@ -614,7 +601,17 @@ export function createPortfolioScreen(scene, screenColor, writingColor, screenRo
     const zpbutton = -0.4013;
 	const buttondist = 0.26;
 
-	const backButton = createBackButton(scene, screenColor, writingColor, screenRotation, 0, ypbutton, zpbutton);
+	const backButton = createBackButton({
+		scene: scene,
+		screenColor: screenColor,
+		writingColor: writingColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(
+			0,
+			ypbutton - 0.1,
+			zpbutton - 0.016
+		),
+	});
 
 	const leftButton = createCircleButton({
 		scene: scene,
