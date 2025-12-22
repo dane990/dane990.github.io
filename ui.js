@@ -27,6 +27,7 @@ import { createCircleButton } from './ui/primitives/createCircleButton.js';
 import { createPlaySymbol } from './ui/primitives/createPlaySymbol.js';
 import { createStopSymbol } from './ui/primitives/createStopSymbol.js';
 import { createPortfolioSymbol } from './ui/primitives/createPortfolioSymbol.js';
+import { createSettingsSymbol } from './ui/primitives/createSettingsSymbol.js';
 
 
 import { wait } from './utils';
@@ -83,61 +84,6 @@ export function updateTimeMesh(scene, menuScreen, screenRotation, writingColor, 
 	});
     
 
-}
-
-function createSettingsIcon(scene, writingColor, screenRotation, px, py, pz) {
-
-	// Material for all parts
-	const material = new THREE.MeshBasicMaterial({ color: writingColor });
-	const settingsIconGroup = new THREE.Group();
-
-	const radius = 0.4;
-	const circleGeometry = new THREE.CylinderGeometry(radius, radius, 0.01, 32);
-    const circleMesh = new THREE.Mesh(circleGeometry, material);
-    circleMesh.rotation.x = Math.PI / 2;
-    settingsIconGroup.add(circleMesh); // Add the circle to the group
-
-    // Create gear teeth using box geometries around the circle
-    const teethCount = 8;
-    const teethWidth = 0.2;
-    const teethHeight = 0.2;
-    const teethDepth = 0.01;
-    
-
-    for (let i = 0; i < teethCount; i++) {
-        const angle = (i / teethCount) * Math.PI * 2;
-        const x = radius * Math.cos(angle);
-        const y = radius * Math.sin(angle);
-
-        const toothGeometry = new THREE.BoxGeometry(teethWidth, teethHeight, teethDepth);
-        const toothMesh = new THREE.Mesh(toothGeometry, material);
-
-        toothMesh.position.set(x, y, 0);
-        toothMesh.rotation.z = -angle;
-
-        settingsIconGroup.add(toothMesh); // Add each tooth to the group
-    }
-
-    // Add the group to the scene
-	settingsIconGroup.position.set(px, py, pz);
-	settingsIconGroup.rotation.x = screenRotation;
-	const scalef = 0.13;
-	settingsIconGroup.scale.set(scalef, scalef, scalef);
-    scene.add(settingsIconGroup);
-
-	return settingsIconGroup;
-
-}
-
-function createGearCenter(scene, screenColor, screenRotation, px, py, pz) {
-	const buttonGeometry = new THREE.CircleGeometry(0.03, 32);
-	const buttonMaterial = new THREE.MeshBasicMaterial({ color: screenColor, side: THREE.DoubleSide });
-	const buttonMesh = new THREE.Mesh(buttonGeometry, buttonMaterial);
-	
-	buttonMesh.position.set(px, py, pz);
-	buttonMesh.rotation.x = screenRotation;
-	scene.add(buttonMesh);
-	return buttonMesh;
 }
 
 export function createMenuScreen(scene, screenColor, writingColor, screenRotation) {
@@ -237,8 +183,20 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		buttonRadius: buttonRadius,
 		borderRadius: borderRadius,
 	});
-    const settingsIcon = createSettingsIcon(scene, writingColor, screenRotation, -buttondist, ypbutton, zpbutton+0.0004)
-    const gearCenter = createGearCenter(scene, screenColor, screenRotation, -buttondist, ypbutton, zpbutton-0.0003)
+    //const settingsIcon = createSettingsIcon(scene, writingColor, screenRotation, -buttondist, ypbutton, zpbutton+0.0004)
+    //const gearCenter = createGearCenter(scene, screenColor, screenRotation, -buttondist, ypbutton, zpbutton-0.0003)
+
+	const settingsSymbol = createSettingsSymbol({
+		scene: scene,
+		writingColor: writingColor,
+		screenColor: screenColor,
+		screenRotation: screenRotation,
+		position: new THREE.Vector3(
+			-buttondist,
+			ypbutton,
+			zpbutton + 0.0004,
+		),
+	});
 
     const menuScreen = new THREE.Group();
     menuScreen.add(midButton);
@@ -249,8 +207,8 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
     menuScreen.add(portSymbol);
     menuScreen.add(portHandle);
     menuScreen.add(rightButton);
-    menuScreen.add(settingsIcon);
-    menuScreen.add(gearCenter);
+    menuScreen.add(settingsSymbol);
+    //menuScreen.add(gearCenter);
     scene.add(menuScreen)
     return menuScreen;
 }
