@@ -22,6 +22,7 @@ import asolMasteryURL from './assets/asolmastery.png';
 import pianoImageURL from './assets/pianoimage.png';
 import frenchhornURL from './assets/frenchhorn.png';
 
+// primitives
 import { createTextMesh } from './ui/primitives/createTextMesh.js';
 import { createCircleButton } from './ui/primitives/createCircleButton.js';
 import { createPlaySymbol } from './ui/primitives/createPlaySymbol.js';
@@ -30,6 +31,9 @@ import { createPortfolioSymbol } from './ui/primitives/createPortfolioSymbol.js'
 import { createSettingsSymbol } from './ui/primitives/createSettingsSymbol.js';
 import { createBackButton } from './ui/primitives/createBackButton.js';
 import { createBackSymbol } from './ui/primitives/createBackSymbol.js';
+
+// components
+import { createPlayButton } from './ui/components/createPlayButton.js';
 
 
 import { wait } from './utils';
@@ -96,8 +100,7 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 	const buttonRadius = 0.1;
 	const borderRadius = 0.107;
 
-    //play button
-	const midButton = createCircleButton({
+	const playButton = createPlayButton({
 		scene: scene,
 		screenColor: screenColor,
 		writingColor: writingColor,
@@ -106,34 +109,6 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		buttonRadius: buttonRadius,
 		borderRadius: borderRadius,
 	});
-  
-	const playSymbol = createPlaySymbol({
-		scene: scene,
-		writingColor: writingColor,
-		screenRotation: screenRotation,
-		position: new THREE.Vector3(-0.01, ypbutton, zpbutton - 0.0002),
-	});
-
-
-    //stop button
-	const midButton2 = createCircleButton({
-		scene: scene,
-		screenColor: screenColor,
-		writingColor: writingColor,
-		screenRotation: screenRotation,
-		position: new THREE.Vector3(0, ypbutton, zpbutton),
-		buttonRadius: buttonRadius,
-		borderRadius: borderRadius,
-	});
-	const stopSymbol = createStopSymbol({
-		scene: scene,
-		writingColor: writingColor,
-		screenRotation: screenRotation,
-		position: new THREE.Vector3(0, ypbutton, zpbutton - 0.0002),
-	});
-
-    midButton2.visible = false;
-    stopSymbol.visible = false;
 
     //portfolio button
 	const leftButton = createCircleButton({ //tbw, tbh, lrw, lrh
@@ -201,10 +176,7 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 	});
 
     const menuScreen = new THREE.Group();
-    menuScreen.add(midButton);
-    menuScreen.add(playSymbol);
-    menuScreen.add(midButton2);
-    menuScreen.add(stopSymbol);
+    menuScreen.add(playButton.root);
     menuScreen.add(leftButton);
     menuScreen.add(portSymbol);
     menuScreen.add(portHandle);
@@ -212,7 +184,18 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
     menuScreen.add(settingsSymbol);
     //menuScreen.add(gearCenter);
     scene.add(menuScreen)
-    return menuScreen;
+
+    return {
+		root: menuScreen,
+		interactables: {
+			playButton: playButton.root,
+			portfolioButton: leftButton,
+        	settingsButton: rightButton,
+		},
+		components: {
+			playButton: playButton,
+		}
+	}
 }
 
 function createVolumeBar(scene, writingColor, screenRotation, px, py, pz) {
