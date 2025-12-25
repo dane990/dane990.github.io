@@ -824,20 +824,15 @@ function onClick(event) {
 function onMouseMove(event) {
 	
 	const inter = updateRaycaster(event, menuScreen, settingsScreen)
-	//console.log('hover inter:', inter.playButton);
-	// Change cursor to pointer if hovering over the plane, otherwise reset to default
-	console.log('hover inter:', menuScreen.visible && inter.playButton.length);
+	
 	if (menuScreen.visible && (
         inter.playButton.length > 0 ||
         inter.portfolioButton.length > 0 ||
         inter.settingsButton.length > 0
     )) {
         document.body.style.cursor = 'pointer';
-		console.log('HELLO');
 
-    }
-	
-	if ( (inter.volBar.length > 0 && settingsScreen.visible) ) {
+    } else if ( (inter.volBar.length > 0 && settingsScreen.visible) ) {
 
 		const x = inter.volBar[0].point.x
 		const maxX = -(0.17*3.01/2 + 0.11);
@@ -924,7 +919,7 @@ function onMouseMove(event) {
 		
 	} else {
 
-		//document.body.style.cursor = 'default';
+		document.body.style.cursor = 'default';
 
 	}
   }
