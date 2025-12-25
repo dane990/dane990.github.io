@@ -30,6 +30,7 @@ import { createBackSymbol } from './ui/primitives/createBackSymbol.js';
 // components
 import { createPlayButton } from './ui/components/createPlayButton.js';
 import { createPortfolioButton } from './ui/components/createPortfolioButton.js';
+import { createSettingsButton } from './ui/components/createSettingsButton.js';
 
 
 import { wait } from './utils';
@@ -118,9 +119,8 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		borderRadius: borderRadius,
 	});
 	
-
     //settings button
-	const rightButton = createCircleButton({
+	const settingsButton = createSettingsButton({
 		scene: scene,
 		screenColor: screenColor,
 		writingColor: writingColor,
@@ -129,27 +129,13 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		buttonRadius: buttonRadius,
 		borderRadius: borderRadius,
 	});
-    //const settingsIcon = createSettingsIcon(scene, writingColor, screenRotation, -buttondist, ypbutton, zpbutton+0.0004)
-    //const gearCenter = createGearCenter(scene, screenColor, screenRotation, -buttondist, ypbutton, zpbutton-0.0003)
-
-	const settingsSymbol = createSettingsSymbol({
-		scene: scene,
-		writingColor: writingColor,
-		screenColor: screenColor,
-		screenRotation: screenRotation,
-		position: new THREE.Vector3(
-			-buttondist,
-			ypbutton,
-			zpbutton + 0.0004,
-		),
-	});
 
     const menuScreen = new THREE.Group();
+
     menuScreen.add(playButton.root);
     menuScreen.add(portfolioButton.root);
-    menuScreen.add(rightButton);
-    menuScreen.add(settingsSymbol);
-    //menuScreen.add(gearCenter);
+    menuScreen.add(settingsButton.root);
+
     scene.add(menuScreen)
 
     return {
@@ -157,10 +143,12 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		interactables: {
 			playButton: playButton.root,
 			portfolioButton: portfolioButton.root,
-        	settingsButton: rightButton,
+        	settingsButton: settingsButton.root,
 		},
 		components: {
 			playButton: playButton,
+			portfolioButton: portfolioButton,
+			settingsButton: settingsButton,
 		}
 	}
 }
