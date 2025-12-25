@@ -1,10 +1,5 @@
 import * as THREE from 'three';
 
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { Sky } from "three/examples/jsm/objects/Sky.js";
-import { Reflector } from "three/examples/jsm/objects/Reflector.js";
-import { LightProbeHelper } from "three/examples/jsm/helpers/LightProbeHelper.js";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 
@@ -34,6 +29,7 @@ import { createBackSymbol } from './ui/primitives/createBackSymbol.js';
 
 // components
 import { createPlayButton } from './ui/components/createPlayButton.js';
+import { createPortfolioButton } from './ui/components/createPortfolioButton.js';
 
 
 import { wait } from './utils';
@@ -100,6 +96,7 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 	const buttonRadius = 0.1;
 	const borderRadius = 0.107;
 
+	//play button
 	const playButton = createPlayButton({
 		scene: scene,
 		screenColor: screenColor,
@@ -111,7 +108,7 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 	});
 
     //portfolio button
-	const leftButton = createCircleButton({ //tbw, tbh, lrw, lrh
+	const portfolioButton = createPortfolioButton({
 		scene: scene,
 		screenColor: screenColor,
 		writingColor: writingColor,
@@ -119,34 +116,6 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		position: new THREE.Vector3(buttondist, ypbutton, zpbutton),
 		buttonRadius: buttonRadius,
 		borderRadius: borderRadius,
-	});
-	const portSymbol = createPortfolioSymbol({
-		scene: scene,
-		writingColor: writingColor,
-		screenRotation: screenRotation,
-		position: new THREE.Vector3(
-			buttondist,
-			ypbutton - 0.014,
-			zpbutton + 0.0026
-		),
-		topBottomWidth: 0.05,
-		topBottomHeight: 0.03,
-		leftRightWidth: 0.04,
-		leftRightHeight: 0.09,
-	});
-	const portHandle = createPortfolioSymbol({
-		scene: scene,
-		writingColor: writingColor,
-		screenRotation: screenRotation,
-		position: new THREE.Vector3(
-			buttondist,
-			ypbutton + 0.035,
-			zpbutton + 0.0104
-		),
-		topBottomWidth: 0.08,
-		topBottomHeight: 0.01,
-		leftRightWidth: 0.01,
-		leftRightHeight: 0.05,
 	});
 	
 
@@ -177,9 +146,7 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 
     const menuScreen = new THREE.Group();
     menuScreen.add(playButton.root);
-    menuScreen.add(leftButton);
-    menuScreen.add(portSymbol);
-    menuScreen.add(portHandle);
+    menuScreen.add(portfolioButton.root);
     menuScreen.add(rightButton);
     menuScreen.add(settingsSymbol);
     //menuScreen.add(gearCenter);
@@ -189,7 +156,7 @@ export function createMenuScreen(scene, screenColor, writingColor, screenRotatio
 		root: menuScreen,
 		interactables: {
 			playButton: playButton.root,
-			portfolioButton: leftButton,
+			portfolioButton: portfolioButton.root,
         	settingsButton: rightButton,
 		},
 		components: {

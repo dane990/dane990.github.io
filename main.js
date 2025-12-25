@@ -1,11 +1,13 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { createText, OrbitControls } from 'three/examples/jsm/Addons.js';
-import { Sky } from 'three/addons/objects/Sky.js';
-import { Reflector } from 'three/examples/jsm/Addons.js';
-import { LightProbeHelper } from 'three/addons/helpers/LightProbeHelper.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import * as THREE from "three";
+
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Sky } from "three/examples/jsm/objects/Sky.js";
+import { Reflector } from "three/examples/jsm/objects/Reflector.js";
+import { LightProbeHelper } from "three/examples/jsm/helpers/LightProbeHelper.js";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
+
 import skyTextureUrl from './assets/sky.jpg';
 import sky2TextureUrl from './assets/sky2.jpg';
 import sky3TextureUrl from './assets/sky3.jpg';
@@ -70,7 +72,11 @@ const audioLoader = new THREE.AudioLoader(loadingManager);
 const soundUrl = new URL('pianosound.mp3', import.meta.url);
 
 let screen;
+
 let menuScreen;
+let menuInteractables;
+let menuComponents;
+
 let settingsScreen;
 let portfolioScreen;
 let projectsScreen;
@@ -82,6 +88,8 @@ let hobbiesScreen;
 let hobbies1;
 let hobbies2;
 let hobbies3;
+
+
 
 audioLoader.load( soundUrl.href, function( buffer ) {
 	sound.setBuffer( buffer );
@@ -149,7 +157,14 @@ assetLoader.load(sceneUrl.href, function(gltf) {
 	//create the uis
 	screen = createScreen(scene, screenColor, screenRotation);	
 
-	menuScreen = createMenuScreen(scene, screenColor, writingColor, screenRotation);
+	//menuScreen = createMenuScreen(scene, screenColor, writingColor, screenRotation);
+	const menu = createMenuScreen(scene, screenColor, writingColor, screenRotation);
+	menuScreen = menu.root;
+	menuInteractables = menu.interactables;
+	menuComponents = menu.components;
+
+	scene.add(menuScreen);
+
 	const timeInterval = setInterval(function() {
 	updateTimeMesh(scene, menuScreen, screenRotation, writingColor, daysOfWeek, months);
 	}, 1000);
@@ -390,17 +405,12 @@ function updateRaycaster(event, menuScreen, settingsScreen) {
 	raycaster.setFromCamera(mouse, camera);
 
 	const intersects = {
+
 		//menu
-		midButton: raycaster.intersectObject(menuScreen.children[0]),
-		playSymbol: raycaster.intersectObject(menuScreen.children[1]),
-		midButton2: raycaster.intersectObject(menuScreen.children[2]),
-		stopSymbol: raycaster.intersectObject(menuScreen.children[3]),
-		leftButton: raycaster.intersectObject(menuScreen.children[4]),
-		portSymbol: raycaster.intersectObject(menuScreen.children[5]),
-		portHandle: raycaster.intersectObject(menuScreen.children[6]),
-		rightButton: raycaster.intersectObject(menuScreen.children[7]),
-		settingsIcon: raycaster.intersectObject(menuScreen.children[8]),
-		gearCenter: raycaster.intersectObject(menuScreen.children[9]),
+		playButton: raycaster.intersectObject(menuInteractables.playButton, true),
+		portfolioButton: raycaster.intersectObject(menuInteractables.portfolioButton),
+		settingsButton: raycaster.intersectObject(menuInteractables.settingsButton),
+
 		//settings
 		volBar: raycaster.intersectObject(settingsScreen.children[0]),
 		backButton: raycaster.intersectObject(settingsScreen.children[3]),
@@ -437,29 +447,32 @@ function updateRaycaster(event, menuScreen, settingsScreen) {
 function onClick(event) {
 
 	const inter = updateRaycaster(event, menuScreen, settingsScreen)
-	midButton = menuScreen.children[0];
-	playSymbol = menuScreen.children[1];
-	midButton2 = menuScreen.children[2];
-	stopSymbol = menuScreen.children[3];
+	//midButton = menuScreen.children[0];
+	//playSymbol = menuScreen.children[1];
+	//midButton2 = menuScreen.children[2];
+	//stopSymbol = menuScreen.children[3];
 
- 	 // Check if an intersection occurred
-  	if ( (inter.midButton.length > 0) && midButton.visible && menuScreen.visible ) {
+	const playButton = menuComponents.playButton;
 
-		midButton.visible = false;
-		playSymbol.visible = false;
-		playAnimation();
-		midButton2.visible = true;
-		stopSymbol.visible = true;
+ 	// Check if an intersection occurred for play button
+  	if ( (inter.playButton.length > 0) && menuScreen.visible ) {
+		if (playButton.playSymbol.visible) {
 
-  	} else if ( (inter.midButton2.length > 0 || inter.stopSymbol.length > 0) && midButton2.visible && menuScreen.visible ) {
+			playButton.playSymbol.visible = false;
+			playButton.stopSymbol.visible = true;
+			playAnimation();
 
-		midButton2.visible = false;
-		stopSymbol.visible = false;
-		stopAndResetAnimation();
-		midButton.visible = true;
-		playSymbol.visible = true;
+  		} else {
 
-  	} else if ( (inter.leftButton.length > 0 || inter.portSymbol.length > 0 || inter.portHandle.length > 0) && menuScreen.visible ) {
+			playButton.playSymbol.visible = true;
+			playButton.stopSymbol.visible = false;
+			stopAndResetAnimation();
+
+		}
+  	}
+
+	// Check if an intersection occurred for portfolio button
+	if ( (inter.portfolioButton.length > 0) && menuScreen.visible ) {
 
 		if (menuToPortAnim) return;
 
@@ -472,16 +485,20 @@ function onClick(event) {
 			menuScreen.visible = false;
 			portfolioScreen.visible = true;
 		}, 2000);
-		
 
-	} else if ( (inter.rightButton.length > 0 || inter.settingsIcon.length > 0 || inter.gearCenter.length > 0) && menuScreen.visible ) {
+	}
+	
+	// Check if an intersection occurred for settings button
+	if ( (inter.settingsButton.length > 0) && menuScreen.visible ) {
 
 		if (menuToPortAnim) return;
 		menuScreen.visible = false;
 		settingsScreen.visible = true;
 		settingsScreen.children[1].visible = true;
 
-	} else if ( (inter.volBar.length > 0 && settingsScreen.visible) ) { //&& settingsscreenvisible
+	}
+		
+	if ( (inter.volBar.length > 0 && settingsScreen.visible) ) { //&& settingsscreenvisible
 		
 		const x = inter.volBar[0].point.x
 		const ypbutton = 2.62;
@@ -807,25 +824,20 @@ function onClick(event) {
 function onMouseMove(event) {
 	
 	const inter = updateRaycaster(event, menuScreen, settingsScreen)
-
+	//console.log('hover inter:', inter.playButton);
 	// Change cursor to pointer if hovering over the plane, otherwise reset to default
-	if ( (inter.midButton.length > 0 || inter.playSymbol.length > 0) && menuScreen.visible ) {
+	console.log('hover inter:', menuScreen.visible && inter.playButton.length);
+	if (menuScreen.visible && (
+        inter.playButton.length > 0 ||
+        inter.portfolioButton.length > 0 ||
+        inter.settingsButton.length > 0
+    )) {
+        document.body.style.cursor = 'pointer';
+		console.log('HELLO');
 
-	  	document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.midButton2.length > 0 || inter.stopSymbol.length > 0) && menuScreen.visible ) {
-
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.leftButton.length > 0 || inter.portSymbol.length > 0 || inter.portHandle.length > 0) && menuScreen.visible ) {
-
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.rightButton.length > 0 || inter.settingsIcon.length > 0 || inter.gearCenter.length > 0) && menuScreen.visible ) {
-
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.volBar.length > 0 && settingsScreen.visible) ) {
+    }
+	
+	if ( (inter.volBar.length > 0 && settingsScreen.visible) ) {
 
 		const x = inter.volBar[0].point.x
 		const maxX = -(0.17*3.01/2 + 0.11);
@@ -912,7 +924,7 @@ function onMouseMove(event) {
 		
 	} else {
 
-		document.body.style.cursor = 'default';
+		//document.body.style.cursor = 'default';
 
 	}
   }
