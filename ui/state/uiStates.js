@@ -1,0 +1,8 @@
+export const UI_STATES = {
+    MENU: 'MENU',
+    SETTINGS: 'SETTINGS',
+    PORTFOLIO: 'PORTFOLIO',
+    PROJECTS: 'PROJECTS',
+    ABOUT: 'ABOUT',
+    HOBBIES: 'HOBBIES',
+};

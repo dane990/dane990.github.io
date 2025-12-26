@@ -19,6 +19,10 @@ import { createScreen, updateTimeMesh, createMenuScreen, createVolumeIndicator, 
 import { createProjects1, createProjects2, createProjects3, createHobbies1, createHobbies2, createHobbies3, } from './ui.js';
 const { MathUtils, Vector3 } = THREE;
 
+import { createUIStateMachine } from './ui/state/createUIStateMachine.js';
+import { UI_STATES } from './ui/state/uiStates.js';
+
+
 //scene, camera, renderer-------------------------------------------------------------------------------------------
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -71,6 +75,8 @@ const sound = new THREE.Audio( listener );
 const audioLoader = new THREE.AudioLoader(loadingManager);
 const soundUrl = new URL('pianosound.mp3', import.meta.url);
 
+
+let uiState;
 let screen;
 
 let menuScreen;
@@ -183,6 +189,45 @@ assetLoader.load(sceneUrl.href, function(gltf) {
 	hobbies2 = createHobbies2(scene, screenColor, writingColor, screenRotation);
 	hobbies3 = createHobbies3(scene, screenColor, writingColor, screenRotation);
 
+	// states
+	uiState = createUIStateMachine({
+		screens: {
+			[UI_STATES.MENU]: menuScreen,
+			[UI_STATES.SETTINGS]: settingsScreen,
+			[UI_STATES.PORTFOLIO]: portfolioScreen,
+			[UI_STATES.PROJECTS]: projectsScreen,
+			[UI_STATES.ABOUT]: aboutScreen,
+			[UI_STATES.HOBBIES]: hobbiesScreen,
+		},
+		hooks: {
+			[UI_STATES.MENU]: {
+				onExit(nextState) {
+					if (nextState === UI_STATES.PORTFOLIO) {
+						startMenuToPortfolioTransition();
+					}
+				}
+			},
+			[UI_STATES.PORTFOLIO]: {
+				onExit(nextState) {
+					if (nextState === UI_STATES.MENU) {
+						startPortfolioToMenuTransition();
+					}
+				}
+			},
+			[UI_STATES.SETTINGS]: {
+				onEnter() {
+					settingsScreen.children[1].visible = true;
+				},
+				onExit() {
+					settingsScreen.children[1].visible = false;
+				}
+			}
+    	}
+	});
+
+	uiState.goTo(UI_STATES.MENU);
+
+
 	//screen setup
 	menuScreen.visible = true;
 	settingsScreen.visible = false;
@@ -285,10 +330,8 @@ assetLoader.load(sceneUrl.href, function(gltf) {
 			mixer.update(clock.getDelta());
 		}
 		renderer.render(scene, camera);
-}
 
-
-
+	}
 
 }, undefined, function(error) {
 	console.error(error);
@@ -338,6 +381,38 @@ function stopAndResetAnimation() {
 	
 	sound.stop();
 
+}
+
+function startMenuToPortfolioTransition() {
+
+    uiState.lockNavigation();
+
+    menuToPortAnim = true;
+    animStartTime = Date.now();
+
+    camera.minDistance = 0;
+    orbit.enableRotate = false;
+
+    setTimeout(() => {
+        menuToPortAnim = false;
+        uiState.unlockNavigation();
+    }, 2000);
+}
+
+function startPortfolioToMenuTransition() {
+
+    uiState.lockNavigation();
+
+    portToMenuAnim = true;
+    animStartTime = Date.now();
+
+    orbit.enableRotate = true;
+    orbit.minDistance = 0.7;
+
+    setTimeout(() => {
+        portToMenuAnim = false;
+        uiState.unlockNavigation();
+    }, 2000);
 }
 
 
@@ -464,29 +539,8 @@ function handlePlayClick() {
 	}
 }
 
-function handlePortfolioClick() {
-	if (menuToPortAnim) return;
-
-	menuToPortAnim = true;
-	animStartTime = Date.now();
-	camera.minDistance = 0;
-	orbit.enableRotate = false;
-	
-	setTimeout(() => {
-		menuScreen.visible = false;
-		portfolioScreen.visible = true;
-	}, 2000);
-}
-
-function handleSettingsClick() {
-	if (menuToPortAnim) return;
-	menuScreen.visible = false;
-	settingsScreen.visible = true;
-	settingsScreen.children[1].visible = true;
-}
-
 // Settings handlers
-function handleVolumeBaClick() {
+function handleVolumeBarClick(hits) {
 	const x = hits.volBar[0].point.x
 	const ypbutton = 2.62;
 	const zpbutton = -0.4013;
@@ -519,27 +573,26 @@ function onClick(event) {
 
 	const hits = updateRaycaster(event, menuScreen, settingsScreen)
 
-	if (hit(hits.playButton) && menuScreen.visible) {
+	if (hit(hits.playButton) && uiState.is(UI_STATES.MENU)) {
 		handlePlayClick();
 		return;
 	}
 
-	if (hit(hits.portfolioButton) && menuScreen.visible) {
-		handlePortfolioClick();
+	if (hit(hits.portfolioButton) && uiState.is(UI_STATES.MENU)) {
+		uiState.goTo(UI_STATES.PORTFOLIO);
 		return;
 	}
 	
-	if (hit(hits.settingsButton) && menuScreen.visible) {
-		handleSettingsClick();
+	if (hit(hits.settingsButton) && uiState.is(UI_STATES.MENU)) {
+		uiState.goTo(UI_STATES.SETTINGS);
 		return;
 	}
 		
 	if (hit(hits.volBar) && settingsScreen.visible) { //&& settingsscreenvisible
-		handleVolumeBarClick();
+		handleVolumeBarClick(hits);
 		return;
 	}
 
-	
 	
 	if ( (hits.settings1Button.length > 0 ) && settingsScreen.visible ) {
 		
@@ -668,22 +721,11 @@ function onClick(event) {
 
 	} else if ( (hits.backButton.length > 0 ) && settingsScreen.visible ) {
 		
-		settingsScreen.visible = false;
-		settingsScreen.children[1].visible = false; //negative sound indicator
-		menuScreen.visible = true;
+		uiState.goTo(UI_STATES.MENU);
 
 	} else if ( (hits.portBackButton.length > 0 ) && portfolioScreen.visible ) {
 
-		if (portToMenuAnim) return;
-		portToMenuAnim = true;
-		animStartTime = Date.now();
-		orbit.minDistance = 0.7;
-		orbit.enableRotate = true;
-		
-		setTimeout(() => {
-			portfolioScreen.visible = false;
-			menuScreen.visible = true;
-		}, 2000);
+		uiState.goTo(UI_STATES.MENU);
 
 	} else if ( (hits.portLeftButton.length > 0 ) && portfolioScreen.visible ) {
 		
