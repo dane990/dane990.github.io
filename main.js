@@ -395,7 +395,7 @@ window.addEventListener('resize', function() {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-function updateRaycaster(event, menuScreen, settingsScreen) {
+function updateRaycaster(event) {
 
 	// Convert mouse position to normalized device coordinates (NDC)
 	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -408,8 +408,8 @@ function updateRaycaster(event, menuScreen, settingsScreen) {
 
 		//menu
 		playButton: raycaster.intersectObject(menuInteractables.playButton, true),
-		portfolioButton: raycaster.intersectObject(menuInteractables.portfolioButton),
-		settingsButton: raycaster.intersectObject(menuInteractables.settingsButton),
+		portfolioButton: raycaster.intersectObject(menuInteractables.portfolioButton, true),
+		settingsButton: raycaster.intersectObject(menuInteractables.settingsButton, true),
 
 		//settings
 		volBar: raycaster.intersectObject(settingsScreen.children[0]),
@@ -443,90 +443,105 @@ function updateRaycaster(event, menuScreen, settingsScreen) {
 	return intersects;
 }
 
+//////////////////////////////////////////////////////////////////////
+
+function hit(intersections) {
+    return intersections && intersections.length > 0;
+}
+
+// Menu handlers
+function handlePlayClick() {
+	const playButton = menuComponents.playButton;
+
+	if (playButton.playSymbol.visible) {
+		playButton.playSymbol.visible = false;
+		playButton.stopSymbol.visible = true;
+		playAnimation();
+	} else {
+		playButton.playSymbol.visible = true;
+		playButton.stopSymbol.visible = false;
+		stopAndResetAnimation();
+	}
+}
+
+function handlePortfolioClick() {
+	if (menuToPortAnim) return;
+
+	menuToPortAnim = true;
+	animStartTime = Date.now();
+	camera.minDistance = 0;
+	orbit.enableRotate = false;
+	
+	setTimeout(() => {
+		menuScreen.visible = false;
+		portfolioScreen.visible = true;
+	}, 2000);
+}
+
+function handleSettingsClick() {
+	if (menuToPortAnim) return;
+	menuScreen.visible = false;
+	settingsScreen.visible = true;
+	settingsScreen.children[1].visible = true;
+}
+
+// Settings handlers
+function handleVolumeBaClick() {
+	const x = hits.volBar[0].point.x
+	const ypbutton = 2.62;
+	const zpbutton = -0.4013;
+	const maxX = -(0.17*3.01/2 + 0.11);
+	const minX = 0.17*3.01/2 - 0.11;
+	
+	var currentVolumeIndicator = settingsScreen.children[1];
+
+	if ( x <= minX && x >= maxX ) {
+		
+		if (currentVolumeIndicator) {
+			scene.remove(currentVolumeIndicator);
+			settingsScreen.remove(currentVolumeIndicator);
+			disposeGroup(currentVolumeIndicator);
+			currentVolumeIndicator = null;
+		}
+
+		function mapRange(value, inMin, inMax, outMin, outMax) {
+			return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+		}
+		const volume = mapRange(x, minX, maxX, 0, 1);
+		currentVolumeIndicator = createVolumeIndicator(scene, screenColor, screenRotation, -0.11, ypbutton+0.27, zpbutton+0.0446, volume);
+		settingsScreen.children.splice(1, 0, currentVolumeIndicator);
+		sound.setVolume(volume);
+	} //0.14- 0.36
+}
+
 // Handle mouse click event
 function onClick(event) {
 
-	const inter = updateRaycaster(event, menuScreen, settingsScreen)
-	//midButton = menuScreen.children[0];
-	//playSymbol = menuScreen.children[1];
-	//midButton2 = menuScreen.children[2];
-	//stopSymbol = menuScreen.children[3];
+	const hits = updateRaycaster(event, menuScreen, settingsScreen)
 
-	const playButton = menuComponents.playButton;
+	if (hit(hits.playButton) && menuScreen.visible) {
+		handlePlayClick();
+		return;
+	}
 
- 	// Check if an intersection occurred for play button
-  	if ( (inter.playButton.length > 0) && menuScreen.visible ) {
-		if (playButton.playSymbol.visible) {
-
-			playButton.playSymbol.visible = false;
-			playButton.stopSymbol.visible = true;
-			playAnimation();
-
-  		} else {
-
-			playButton.playSymbol.visible = true;
-			playButton.stopSymbol.visible = false;
-			stopAndResetAnimation();
-
-		}
-  	}
-
-	// Check if an intersection occurred for portfolio button
-	if ( (inter.portfolioButton.length > 0) && menuScreen.visible ) {
-
-		if (menuToPortAnim) return;
-
-		menuToPortAnim = true;
-		animStartTime = Date.now();
-		camera.minDistance = 0;
-		orbit.enableRotate = false;
-		
-		setTimeout(() => {
-			menuScreen.visible = false;
-			portfolioScreen.visible = true;
-		}, 2000);
-
+	if (hit(hits.portfolioButton) && menuScreen.visible) {
+		handlePortfolioClick();
+		return;
 	}
 	
-	// Check if an intersection occurred for settings button
-	if ( (inter.settingsButton.length > 0) && menuScreen.visible ) {
-
-		if (menuToPortAnim) return;
-		menuScreen.visible = false;
-		settingsScreen.visible = true;
-		settingsScreen.children[1].visible = true;
-
+	if (hit(hits.settingsButton) && menuScreen.visible) {
+		handleSettingsClick();
+		return;
 	}
 		
-	if ( (inter.volBar.length > 0 && settingsScreen.visible) ) { //&& settingsscreenvisible
-		
-		const x = inter.volBar[0].point.x
-		const ypbutton = 2.62;
-    	const zpbutton = -0.4013;
-		const maxX = -(0.17*3.01/2 + 0.11);
-		const minX = 0.17*3.01/2 - 0.11;
-		
-		var currentVolumeIndicator = settingsScreen.children[1];
+	if (hit(hits.volBar) && settingsScreen.visible) { //&& settingsscreenvisible
+		handleVolumeBarClick();
+		return;
+	}
 
-		if ( x <= minX && x >= maxX ) {
-			
-			if (currentVolumeIndicator) {
-				scene.remove(currentVolumeIndicator);
-				settingsScreen.remove(currentVolumeIndicator);
-				disposeGroup(currentVolumeIndicator);
-				currentVolumeIndicator = null;
-			}
-
-			function mapRange(value, inMin, inMax, outMin, outMax) {
-				return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
-			}
-			const volume = mapRange(x, minX, maxX, 0, 1);
-			currentVolumeIndicator = createVolumeIndicator(scene, screenColor, screenRotation, -0.11, ypbutton+0.27, zpbutton+0.0446, volume);
-			settingsScreen.children.splice(1, 0, currentVolumeIndicator);
-			sound.setVolume(volume);
-		} //0.14- 0.36
-
-	} else if ( (inter.settings1Button.length > 0 ) && settingsScreen.visible ) {
+	
+	
+	if ( (hits.settings1Button.length > 0 ) && settingsScreen.visible ) {
 		
 		if (settingsScreen.children[4].children[0].children[0].visible) {
 
@@ -551,7 +566,7 @@ function onClick(event) {
 		}
 		updateSphereTexture(skyTextureUrl);
 
-	} else if ( (inter.settings2Button.length > 0 ) && settingsScreen.visible ) {
+	} else if ( (hits.settings2Button.length > 0 ) && settingsScreen.visible ) {
 		
 		if (settingsScreen.children[4].children[1].children[0].visible) {
 
@@ -576,7 +591,7 @@ function onClick(event) {
 		}
 		updateSphereTexture(sky2TextureUrl);
 
-	} else if ( (inter.settings3Button.length > 0 ) && settingsScreen.visible ) {
+	} else if ( (hits.settings3Button.length > 0 ) && settingsScreen.visible ) {
 		
 		if (settingsScreen.children[4].children[2].children[0].visible) {
 
@@ -601,7 +616,7 @@ function onClick(event) {
 		}
 		updateSphereTexture(sky3TextureUrl);
 
-	} else if ( (inter.settings4Button.length > 0 ) && settingsScreen.visible ) {
+	} else if ( (hits.settings4Button.length > 0 ) && settingsScreen.visible ) {
 		
 		if (settingsScreen.children[4].children[3].children[0].visible) {
 
@@ -626,7 +641,7 @@ function onClick(event) {
 		}
 		updateSphereTexture(sky4TextureUrl);
 
-	} else if ( (inter.settings5Button.length > 0 ) && settingsScreen.visible ) {
+	} else if ( (hits.settings5Button.length > 0 ) && settingsScreen.visible ) {
 		
 		if (settingsScreen.children[4].children[4].children[0].visible) {
 
@@ -651,13 +666,13 @@ function onClick(event) {
 		}
 		updateSphereTexture(sky5TextureUrl);
 
-	} else if ( (inter.backButton.length > 0 ) && settingsScreen.visible ) {
+	} else if ( (hits.backButton.length > 0 ) && settingsScreen.visible ) {
 		
 		settingsScreen.visible = false;
 		settingsScreen.children[1].visible = false; //negative sound indicator
 		menuScreen.visible = true;
 
-	} else if ( (inter.portBackButton.length > 0 ) && portfolioScreen.visible ) {
+	} else if ( (hits.portBackButton.length > 0 ) && portfolioScreen.visible ) {
 
 		if (portToMenuAnim) return;
 		portToMenuAnim = true;
@@ -670,7 +685,7 @@ function onClick(event) {
 			menuScreen.visible = true;
 		}, 2000);
 
-	} else if ( (inter.portLeftButton.length > 0 ) && portfolioScreen.visible ) {
+	} else if ( (hits.portLeftButton.length > 0 ) && portfolioScreen.visible ) {
 		
 		if (portToMenuAnim) return;
 		portfolioScreen.visible = false;
@@ -678,13 +693,13 @@ function onClick(event) {
 		projects1.visible = true;
 		projectsScreen.children[1].children[0].children[0].material.color.set(0x178731);
 
-	} else if ( (inter.portMidButton.length > 0 ) && portfolioScreen.visible ) {
+	} else if ( (hits.portMidButton.length > 0 ) && portfolioScreen.visible ) {
 		
 		if (portToMenuAnim) return;
 		portfolioScreen.visible = false;
 		aboutScreen.visible = true;
 		
-	} else if ( (inter.portRightButton.length > 0 ) && portfolioScreen.visible ) {
+	} else if ( (hits.portRightButton.length > 0 ) && portfolioScreen.visible ) {
 		
 		if (portToMenuAnim) return;
 		portfolioScreen.visible = false;
@@ -692,7 +707,7 @@ function onClick(event) {
 		hobbies1.visible = true;
 		hobbiesScreen.children[1].children[0].children[0].material.color.set(0x1b748f);
 		
-	} else if ( (inter.projectsCloseButton.length > 0 ) && projectsScreen.visible ) {
+	} else if ( (hits.projectsCloseButton.length > 0 ) && projectsScreen.visible ) {
 		
 		projectsScreen.visible = false;
 		if (projects1.visible) {
@@ -707,12 +722,12 @@ function onClick(event) {
 		}
 		portfolioScreen.visible = true;
 		
-	} else if ( (inter.aboutCloseButton.length > 0 ) && aboutScreen.visible ) {
+	} else if ( (hits.aboutCloseButton.length > 0 ) && aboutScreen.visible ) {
 		
 		aboutScreen.visible = false;
 		portfolioScreen.visible = true;
 		
-	} else if ( (inter.hobbiesCloseButton.length > 0 ) && hobbiesScreen.visible ) {
+	} else if ( (hits.hobbiesCloseButton.length > 0 ) && hobbiesScreen.visible ) {
 		
 		hobbiesScreen.visible = false;
 		if (hobbies1.visible) {
@@ -727,7 +742,7 @@ function onClick(event) {
 		} 
 		portfolioScreen.visible = true;
 		
-	} else if ( (inter.projects1Button.length > 0 ) && projectsScreen.visible ) {
+	} else if ( (hits.projects1Button.length > 0 ) && projectsScreen.visible ) {
 		
 		if (!projects1.visible) {
 
@@ -742,7 +757,7 @@ function onClick(event) {
 			projectsScreen.children[1].children[0].children[0].material.color.set(0x178731);
 		}
 		
-	} else if ( (inter.projects2Button.length > 0 ) && projectsScreen.visible ) {
+	} else if ( (hits.projects2Button.length > 0 ) && projectsScreen.visible ) {
 		
 		if (!projects2.visible) {
 
@@ -759,7 +774,7 @@ function onClick(event) {
 		}
 		
 		
-	} else if ( (inter.projects3Button.length > 0 ) && projectsScreen.visible ) {
+	} else if ( (hits.projects3Button.length > 0 ) && projectsScreen.visible ) {
 		
 		if (!projects3.visible) {
 
@@ -774,7 +789,7 @@ function onClick(event) {
 			projectsScreen.children[1].children[2].children[0].material.color.set(0x178731);
 		}
 		
-	} else if ( (inter.hobbies1Button.length > 0 ) && hobbiesScreen.visible ) {
+	} else if ( (hits.hobbies1Button.length > 0 ) && hobbiesScreen.visible ) {
 		
 		if (!hobbies1.visible) {
 
@@ -789,7 +804,7 @@ function onClick(event) {
 			hobbiesScreen.children[1].children[0].children[0].material.color.set(0x1b748f);
 		}
 		
-	} else if ( (inter.hobbies2Button.length > 0 ) && hobbiesScreen.visible ) {
+	} else if ( (hits.hobbies2Button.length > 0 ) && hobbiesScreen.visible ) {
 		
 		if (!hobbies2.visible) {
 
@@ -804,7 +819,7 @@ function onClick(event) {
 			hobbiesScreen.children[1].children[1].children[0].material.color.set(0x1b748f);
 		}
 		
-	} else if ( (inter.hobbies3Button.length > 0 ) && hobbiesScreen.visible ) {
+	} else if ( (hits.hobbies3Button.length > 0 ) && hobbiesScreen.visible ) {
 		
 		if (!hobbies3.visible) {
 
@@ -822,107 +837,92 @@ function onClick(event) {
 }
 
 function onMouseMove(event) {
-	
-	const inter = updateRaycaster(event, menuScreen, settingsScreen)
-	
-	if (menuScreen.visible && (
-        inter.playButton.length > 0 ||
-        inter.portfolioButton.length > 0 ||
-        inter.settingsButton.length > 0
+
+    const hits = updateRaycaster(event);
+
+    let hovering = false;
+
+    // MENU
+    if (menuScreen.visible && (
+        hit(hits.playButton) ||
+        hit(hits.portfolioButton) ||
+        hit(hits.settingsButton)
     )) {
-        document.body.style.cursor = 'pointer';
+        hovering = true;
+    }
 
-    } else if ( (inter.volBar.length > 0 && settingsScreen.visible) ) {
+    // SETTINGS
+    if (!hovering && settingsScreen.visible) {
 
-		const x = inter.volBar[0].point.x
-		const maxX = -(0.17*3.01/2 + 0.11);
-		const minX = 0.17*3.01/2 - 0.11;
-		if ( x <= minX && x >= maxX) {
-			document.body.style.cursor = 'pointer';
+        if (hit(hits.volBar)) {
+            const x = hits.volBar[0].point.x;
+            const maxX = -(0.17 * 3.01 / 2 + 0.11);
+            const minX =  (0.17 * 3.01 / 2 - 0.11);
+            if (x <= minX && x >= maxX) {
+                hovering = true;
+            }
+        }
+
+        if (
+            hit(hits.settings1Button) ||
+            hit(hits.settings2Button) ||
+            hit(hits.settings3Button) ||
+            hit(hits.settings4Button) ||
+            hit(hits.settings5Button) ||
+            hit(hits.backButton)
+        ) {
+            hovering = true;
+        }
+    }
+
+    // PORTFOLIO
+    if (!hovering && portfolioScreen.visible) {
+        if (
+            hit(hits.portBackButton) ||
+            hit(hits.portLeftButton) ||
+            hit(hits.portMidButton) ||
+            hit(hits.portRightButton)
+        ) {
+            hovering = true;
+        }
+    }
+
+    // PROJECTS
+    if (!hovering && projectsScreen.visible) {
+        if (
+            hit(hits.projectsCloseButton) ||
+            hit(hits.projects1Button) ||
+            hit(hits.projects2Button) ||
+            hit(hits.projects3Button)
+        ) {
+            hovering = true;
+        }
+    }
+
+	// ABOUT ME
+	if (!hovering && aboutScreen.visible) {
+		if (
+			hit(hits.aboutCloseButton)
+		) {
+			hovering = true;
 		}
-
-	} else if ( (inter.settings1Button.length > 0 ) && settingsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.settings2Button.length > 0 ) && settingsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.settings3Button.length > 0 ) && settingsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.settings4Button.length > 0 ) && settingsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.settings5Button.length > 0 ) && settingsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.backButton.length > 0 ) && settingsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.portBackButton.length > 0 ) && portfolioScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.portLeftButton.length > 0 ) && portfolioScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-
-	} else if ( (inter.portMidButton.length > 0 ) && portfolioScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.portRightButton.length > 0 ) && portfolioScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.projectsCloseButton.length > 0 ) && projectsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.aboutCloseButton.length > 0 ) && aboutScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.hobbiesCloseButton.length > 0 ) && hobbiesScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.projects1Button.length > 0 ) && projectsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.projects2Button.length > 0 ) && projectsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.projects3Button.length > 0 ) && projectsScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.hobbies1Button.length > 0 ) && hobbiesScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.hobbies2Button.length > 0 ) && hobbiesScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else if ( (inter.hobbies3Button.length > 0 ) && hobbiesScreen.visible ) {
-		
-		document.body.style.cursor = 'pointer';
-		
-	} else {
-
-		document.body.style.cursor = 'default';
-
 	}
-  }
+
+    // HOBBIES
+    if (!hovering && hobbiesScreen.visible) {
+        if (
+            hit(hits.hobbiesCloseButton) ||
+            hit(hits.hobbies1Button) ||
+            hit(hits.hobbies2Button) ||
+            hit(hits.hobbies3Button)
+        ) {
+            hovering = true;
+        }
+    }
+
+    renderer.domElement.style.cursor = hovering ? 'pointer' : 'default';
+}
+
 
 // Add the event listener for clicks
 renderer.domElement.addEventListener('click', onClick);
