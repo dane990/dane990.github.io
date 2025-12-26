@@ -1,11 +1,12 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { createText, OrbitControls } from 'three/examples/jsm/Addons.js';
-import { Sky } from 'three/addons/objects/Sky.js';
-import { Reflector } from 'three/examples/jsm/Addons.js';
-import { LightProbeHelper } from 'three/addons/helpers/LightProbeHelper.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Sky } from "three/examples/jsm/objects/Sky.js";
+import { Reflector } from "three/examples/jsm/objects/Reflector.js";
+import { LightProbeHelper } from "three/examples/jsm/helpers/LightProbeHelper.js";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 
 
 
